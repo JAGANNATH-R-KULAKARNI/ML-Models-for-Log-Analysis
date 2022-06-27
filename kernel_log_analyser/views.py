@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from django.http import HttpResponse
 import datetime
@@ -6,6 +7,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import joblib
+from django.views.decorators.csrf import ensure_csrf_cookie
+# from rest_framework.decorators import api_view, renderer_classes
 
 type_map={55: 'authentication',
  56: 'check',
@@ -89,32 +92,54 @@ type_map={55: 'authentication',
  63: 'isapnp:',
  38: 'Real'}
 
-def home_page(request):
-    now = datetime.datetime.now()
-    html = "<html><body>It is now %s.</body></html>" % now
-    #C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser
+# def home_page(request):
+#     now = datetime.datetime.now()
+#     html = "<html><body>It is now %s.</body></html>" % now
 
-    # cv=CountVectorizer()
-    le = LabelEncoder()
+#     le = LabelEncoder()
 
-    with open(r'C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser\classes.npy','rb') as label:
-        le.classes_ = label
-        print('Label Encoder')
-        print(le)
-    with open(r'C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser\vectorizer.pickle','rb') as vect_pickle:
-        print('count vectorizer pickle')
-        cv=joblib.load(vect_pickle)
-        print(cv)
+#     with open(r'C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser\classes.npy','rb') as label:
+#         le.classes_ = label
+#         print('Label Encoder')
+#         print(le)
+#     with open(r'C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser\vectorizer.pickle','rb') as vect_pickle:
+#         print('count vectorizer pickle')
+#         cv=joblib.load(vect_pickle)
+#         print(cv)
         
                 
-    with open(r'C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser\kernel_log_analyser','rb') as f:
-        print('ok')
-        knn_pickle_model=pickle.load(f)
-        data=['closed for user test']
-        vect=cv.transform(data).toarray()
-        print(knn_pickle_model.predict(vect))
-        # predictions_test = le.inverse_transform(knn_pickle_model.predict(vect))
-        print(type_map[knn_pickle_model.predict(vect)[0]])
-        print(vect)
+#     with open(r'C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser\kernel_log_analyser','rb') as f:
+#         print('ok')
+#         knn_pickle_model=pickle.load(f)
+#         data=['closed for user test']
+#         vect=cv.transform(data).toarray()
+#         print(knn_pickle_model.predict(vect))
+#         # predictions_test = le.inverse_transform(knn_pickle_model.predict(vect))
+#         print(type_map[knn_pickle_model.predict(vect)[0]])
+#         print(vect)
         
-    return HttpResponse(html)
+#     return HttpResponse(html)
+# @api_view(('POST',))
+# @renderer_classes((JSONRenderer,))
+def home_page(request):
+    if(request.method == 'POST'):
+        print(json.loads(request.body)['msg'])
+        msg=json.loads(request.body)['msg']
+
+        le = LabelEncoder()
+
+        with open(r'C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser\classes.npy','rb') as label:
+            le.classes_ = label
+            print(le)
+        with open(r'C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser\vectorizer.pickle','rb') as vect_pickle:
+            cv=joblib.load(vect_pickle)
+            print(cv)
+        
+                
+        with open(r'C:\Users\jagan\Desktop\hpe\kernel_log_analyser\kernel_log_analyser\kernel_log_analyser','rb') as f:
+            knn_pickle_model=pickle.load(f)
+            data=[msg]
+            vect=cv.transform(data).toarray()
+        
+        return HttpResponse(type_map[knn_pickle_model.predict(vect)[0]])
+    return HttpResponse('Make a post request')
