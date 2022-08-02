@@ -19,10 +19,16 @@ export default function Shell() {
     >
       <span style={{ color: "#16A774" }}> help</span> --> Get help
       <br />
-      <span style={{ color: "#16A774" }}> find {"<log_text>"}</span> --> Get
-      results from analyser
-      <br />
       <span style={{ color: "#16A774" }}>cls </span>--> clear screen
+      <br />
+      <span style={{ color: "#16A774" }}>
+        {" "}
+        find {"<algorithm>"} {"<log_text>"}
+      </span>{" "}
+      --> Get results from analyser
+      <br />
+      {"<algorithm>"} --> logistic_regression, k_neighbors_classifier,
+      decision_tree_classifier, random_forest, knn
     </div>
   );
 
@@ -38,11 +44,15 @@ export default function Shell() {
     }
     let result = null;
     let break_line = false;
+    let color = "white";
+    let pred = "";
 
     if (textc.trim() == "help") result = help;
     else if (textc.trim().length > 4 && textc.trim().substr(0, 4) == "find") {
+      const algo = textc.split(" ");
+
       await axios
-        .post("http://127.0.0.1:8000/", {
+        .post(`http://127.0.0.1:8000/${algo[1]}`, {
           msg: textc.substr(5),
           // headers: {
           //   "Content-Type": "application/json",
@@ -50,14 +60,19 @@ export default function Shell() {
         })
         .then((u) => {
           console.log(u["data"]);
-          result = "This might be related to '" + u["data"] + "' log file";
+
+          result = "This might be related to '" + u["data"] + " log file.";
+          pred = "Predicted by " + algo[1] + " algorithm";
         })
         .catch((err) => {
           console.log(err);
+          result = "Algorithm " + algo[1] + " not defined :(";
+          color = "#F70000";
         });
     } else {
-      result = "Command Successfully excecuted";
+      result = "Command not found";
       break_line = true;
+      color = "#F70000";
     }
 
     const temp = data;
@@ -66,6 +81,8 @@ export default function Shell() {
       command: textc.trim(),
       result: result,
       bl: break_line,
+      color: color,
+      pred: pred,
     });
 
     setData(temp);
@@ -111,7 +128,7 @@ export default function Shell() {
           {/* <br /> */}
           <div>
             <p style={{ color: "white", fontWeight: 100, fontSize: "12px" }}>
-              Intelligent Kernel Log Analyser [hpe week 3]
+              Intelligent Kernel Log Analyser [hpe cty program]
               <br /> (NIE) - Team 4. All rights Reserved
             </p>
 
@@ -139,7 +156,12 @@ export default function Shell() {
                           {item["command"]}
                         </div>
 
-                        {item["result"]}
+                        <span style={{ color: item["color"] }}>
+                          {" "}
+                          {item["result"]}
+                          <br />
+                          {item["pred"]}
+                        </span>
                       </div>
                     );
                   })}
@@ -159,7 +181,10 @@ export default function Shell() {
                           {item["command"]}
                         </div>
 
-                        {item["result"]}
+                        <span style={{ color: item["color"] }}>
+                          {" "}
+                          {item["result"]}
+                        </span>
                       </div>
                     );
                   })}
@@ -185,7 +210,7 @@ export default function Shell() {
                       "&focus": {
                         border: "0px solid black",
                       },
-                      minWidth: "500px",
+                      minWidth: "1000px",
                     }}
                   ></input>
                 </form>
